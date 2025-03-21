@@ -1,6 +1,7 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 //THERE ARE NO TRY CATCH BLOCKS IN THIS FILE BECAUSE WE ARE USING express-async-errors
 
@@ -21,24 +22,38 @@ blogsRouter.get('/:id', async (request, response, next) => {
 blogsRouter.post('/', async (request, response, next) => {
     const body = request.body
 
-    const user = await User.findById(body.userId)
+    if (!request.user) {
+        return response.status(401).json({ error: 'unauthorized' })
+    }
 
     const blog = new Blog({
         title: body.title,
         author: body.author,
         url: body.url,
         likes: body.likes,
-        user: user.id
+        user: request.user.id
     })
 
     const savedBlog = await blog.save()
-    user.blogs = user.blogs.concat(savedBlog._id)
-    await user.save()
+    request.user.blogs = request.user.blogs.concat(savedBlog._id)
+    await request.user.save()
     response.status(201).json(savedBlog)
 
 })
 
 blogsRouter.delete('/:id', async (request, response, next) => {
+    if (!request.user) {
+        return response.status(401).json({error: 'unauthorized'})
+    }
+    const blog = await Blog.findById(request.params.id)
+    if (!blog) {
+        return response.status(404).json({error: 'blog not found'})
+    }
+
+    if (blog.user.toString() !== request.user.id.toString()) {
+        return response.status(403).json({error: 'not authorized to delete this blog'})
+    }
+
     await Blog.findByIdAndDelete(request.params.id)
     response.status(204).end()
 })
