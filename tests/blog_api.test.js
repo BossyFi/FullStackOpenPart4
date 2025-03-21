@@ -10,10 +10,18 @@ const Blog = require('../models/blog')
 
 beforeEach(async () => {
     await Blog.deleteMany({})
-    let blogObject = new Blog(helper.initialBlogs[0])
-    await blogObject.save()
-    blogObject = new Blog(helper.initialBlogs[1])
-    await blogObject.save()
+
+    //This is a way to wait for all promises to resolve in parallel
+    // const blogObjects = helper.initialBlogs
+    //     .map(blog => new Blog(blog))
+    // const promiseArray = blogObjects.map(blog => blog.save())
+    // await Promise.all(promiseArray)
+
+    // This is a way to wait for all promises to resolve in series
+    for (let blog of helper.initialBlogs) {
+        let blogObject = new Blog(blog)
+        await blogObject.save()
+    }
 })
 
 describe('blog api', () => {
@@ -56,11 +64,11 @@ describe('blog api', () => {
         assert(titles.includes('Canonical string reduction'))
     })
 
-    test('a blog without author or title is not added', async () => {
+    test('a blog without url or title is not added', async () => {
         const newBlog = {
             _id: "5a422b891b54a676234d17fa",
             title: "First class tests",
-            url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
+            author: "Robert C. Martin",
             likes: 10,
             __v: 0
         }
@@ -98,6 +106,27 @@ describe('blog api', () => {
 
         const titles = blogsAtEnd.map(blog => blog.title)
         assert(!titles.includes(blogToDelete.title))
+    })
+
+    test('identification is named id', async () => {
+        const response = await api.get('/api/blogs')
+        assert(response.body[0].id)
+    })
+
+    test('a blog without likes is added with 0 likes', async () => {
+        const newBlog = {
+            _id: "5a422b3a1b54a676234d17f9",
+            title: "Canonical string reduction",
+            author: "Edsger W. Dijkstra",
+            url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
+            __v: 0
+        }
+        const response = await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        assert.strictEqual(response.body.likes, 0)
     })
 })
 
