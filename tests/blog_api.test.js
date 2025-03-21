@@ -43,7 +43,10 @@ describe('blog api', () => {
     })
 
     test('a valid blog can be added', async () => {
+        const users = await helper.usersInDb()
+        const user = users[0]
         const newBlog = {
+            userId : user.id,
             _id: "5a422b3a1b54a676234d17f9",
             title: "Canonical string reduction",
             author: "Edsger W. Dijkstra",
@@ -65,7 +68,10 @@ describe('blog api', () => {
     })
 
     test('a blog without url or title is not added', async () => {
+        const users = await helper.usersInDb()
+        const user = users[0]
         const newBlog = {
+            userId : user.id,
             _id: "5a422b891b54a676234d17fa",
             title: "First class tests",
             author: "Robert C. Martin",
@@ -114,7 +120,10 @@ describe('blog api', () => {
     })
 
     test('a blog without likes is added with 0 likes', async () => {
+        const users = await helper.usersInDb()
+        const user = users[0]
         const newBlog = {
+            userId : user.id,
             _id: "5a422b3a1b54a676234d17f9",
             title: "Canonical string reduction",
             author: "Edsger W. Dijkstra",
