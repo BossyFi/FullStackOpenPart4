@@ -128,6 +128,25 @@ describe('blog api', () => {
             .expect('Content-Type', /application\/json/)
         assert.strictEqual(response.body.likes, 0)
     })
+
+    test('a blog can be updated', async () => {
+        const blogsAtStart = await helper.blogsInDb()
+        const blogToUpdate = blogsAtStart[0]
+        const updatedBlog = {
+            _id: blogsAtStart[0].id,
+            title: "Updated title",
+            author: blogsAtStart[0].author,
+            url: blogsAtStart[0].url,
+            __v: 0
+        }
+        const response = await api
+            .put(`/api/blogs/${blogToUpdate.id}`)
+            .send(updatedBlog)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+
+        assert.strictEqual(response.body.title, "Updated title")
+    })
 })
 
 
