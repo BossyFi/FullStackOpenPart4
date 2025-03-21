@@ -59,6 +59,19 @@ describe('when there is initially one user in db', () => {
 
         assert.strictEqual(usersAtEnd.length, usersAtStart.length)
     })
+
+    test('invalid user creation fails with proper statuscode and message', async () => {
+        const newUser = {
+            username: 'ro',
+            name: 'Superuser',
+            password: 'sa',
+        }
+        const response = await api.post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+        assert(response.body.error.includes('password must be at least 3 characters long'))
+    })
 })
 
 after(async () => {
